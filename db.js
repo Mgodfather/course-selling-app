@@ -7,7 +7,11 @@ const UserSchema = Schema({
     firstName: String,
     lastName: String,
     email: { type: String, unique: true },
-    password: String
+    password: String,
+    purchasedCourses: [{
+        type: ObjectId,
+        ref: 'courses'
+    }]
 })
 
 const AdminSchema = Schema({

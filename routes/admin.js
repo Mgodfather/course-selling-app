@@ -1,12 +1,15 @@
+require('dotenv').config()
 const { Router } = require("express")
-const express = require("express")
+const adminRouter = Router()
+
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const { z } = require("zod")
-const JWT_ADMIN_SECRET = "mayankkashyap"
+const JWT_ADMIN_SECRET = process.env.JWT_ADMIN_SECRET
+const { adminMiddleware } = require("../middlewares/adminMiddleware")
+
 const { AdminModel } = require('../db')
-const app = express()
-const adminRouter = Router()
+const { CourseModel } = require('../db')
 
 
 adminRouter.post('/signup', async function (req, res) {
@@ -30,7 +33,7 @@ adminRouter.post('/signup', async function (req, res) {
     }
 
 
-    
+
     const { firstName, lastName, email, password } = req.body
 
     // hashed password
@@ -58,6 +61,7 @@ adminRouter.post('/signup', async function (req, res) {
     }
 
 })
+
 
 adminRouter.post('/signin', async function (req, res) {
 
@@ -94,28 +98,56 @@ adminRouter.post('/signin', async function (req, res) {
 })
 
 
-// app.use({adminMiddelware})
+// app.use(adminMiddleware)
 
-adminRouter.post('/course', function (req, res) {
+adminRouter.post('/course', adminMiddleware, async function (req, res) {
+
+    const { title, price, discription, imgUrl } = req.body
+    const creatorId = req.creatorId
+    
+    const course = await CourseModel.create({
+        title,
+        price,
+        discription,
+        imgUrl,
+        creatorId
+    })
+    
+    res.json({
+        message: "signin endpoint",
+        course
+    })
+    
+})
+
+adminRouter.put('/course', adminMiddleware, async function (req, res) {
+
+    const { title, price, discription, imgUrl } = req.body
+    const { courseId } = req.query
+    const { creatorId } = req
+    
+
+  await CourseModel.updateOne({ _id: courseId, creatorId }, {
+        title,
+        price,
+        discription,
+        imgUrl
+    })
 
     res.json({
-        message: "signin endpoint"
+        message: "signin endpoint",
     })
 
 })
 
-adminRouter.put('/course', function (req, res) {
+adminRouter.get('/course/all', adminMiddleware, async function (req, res) {
+
+    const creatorId = req.creatorId
+    const allCourses = await CourseModel.find({ creatorId })
 
     res.json({
-        message: "signin endpoint"
-    })
-
-})
-
-adminRouter.get('/course/all', function (req, res) {
-
-    res.json({
-        message: "signin endpoint"
+        message: "signin endpoint",
+        allCourses
     })
 
 })
